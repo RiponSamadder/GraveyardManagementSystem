@@ -1,0 +1,37 @@
+﻿# Visual Studio / .NET
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+appsettings.Development.json
+appsettings.Local.json
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.mode1v3
+*.mode2v3
+*.moved-builder
+*.pbxuser
+*.perspectivev3
+*.xcuserstate
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# Environment variables & secrets
+.env
+*.local
