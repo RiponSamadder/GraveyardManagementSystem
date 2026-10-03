@@ -1,30 +1,32 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:provider/provider.dart';
 import 'package:gms_client/main.dart';
+import 'package:gms_client/providers/auth_provider.dart';
+import 'package:gms_client/providers/dashboard_provider.dart';
+import 'package:gms_client/providers/graveyard_provider.dart';
+import 'package:gms_client/providers/deceased_provider.dart';
+import 'package:gms_client/providers/memorial_provider.dart';
+import 'package:gms_client/providers/finance_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App initialization smoke test', (WidgetTester tester) async {
+    final authProvider = AuthProvider();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: authProvider),
+          ChangeNotifierProvider(create: (_) => DashboardProvider()),
+          ChangeNotifierProvider(create: (_) => GraveyardProvider()),
+          ChangeNotifierProvider(create: (_) => DeceasedProvider()),
+          ChangeNotifierProvider(create: (_) => MemorialProvider()),
+          ChangeNotifierProvider(create: (_) => FinanceProvider()),
+        ],
+        child: const DgmmsApp(),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify DGMMS Portal or Login Screen renders
+    expect(find.text('DGMMS Portal'), findsOneWidget);
   });
 }

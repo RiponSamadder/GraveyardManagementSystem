@@ -168,13 +168,31 @@ public class AuthService : IAuthService
     private static bool VerifyPassword(string password, string? storedHash)
     {
         if (string.IsNullOrEmpty(storedHash)) return false;
+        if (storedHash.StartsWith("$2") || storedHash.Length == 60)
+        {
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            catch
+            {
+                // fall through
+            }
+        }
         var parts = storedHash.Split('.');
         if (parts.Length != 2) return false;
-        var salt = Convert.FromBase64String(parts[0]);
-        var expected = Convert.FromBase64String(parts[1]);
-        var actual = Rfc2898DeriveBytes.Pbkdf2(
-            Encoding.UTF8.GetBytes(password), salt, 100_000, HashAlgorithmName.SHA256, 32);
-        return CryptographicOperations.FixedTimeEquals(actual, expected);
+        try
+        {
+            var salt = Convert.FromBase64String(parts[0]);
+            var expected = Convert.FromBase64String(parts[1]);
+            var actual = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password), salt, 100_000, HashAlgorithmName.SHA256, 32);
+            return CryptographicOperations.FixedTimeEquals(actual, expected);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static UserProfileDto MapToProfile(GmsAppUser u, List<string> roles) =>
