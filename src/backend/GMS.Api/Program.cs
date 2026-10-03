@@ -1,5 +1,7 @@
-﻿using System.Text;
+using System.Text;
+using GMS.Application.Interfaces;
 using GMS.Infrastructure.Data;
+using GMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,13 +10,23 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Database Context
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<GraveyardDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 2. CORS (allow Flutter Web & local development)
+// 2. Application Services (DI)
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGraveyardService, GraveyardService>();
+builder.Services.AddScoped<IGraveService, GraveService>();
+builder.Services.AddScoped<IBurialService, BurialService>();
+builder.Services.AddScoped<IDeceasedService, DeceasedService>();
+builder.Services.AddScoped<IFinanceService, FinanceService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IMemorialService, MemorialService>();
+
+// 3. CORS (allow Flutter Web & local development)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -25,7 +37,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 3. JWT Authentication
+// 4. JWT Authentication
 var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "DefaultSecretKey12345678901234567890!";
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
@@ -50,7 +62,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 4. Controllers & JSON
+// 5. Controllers & JSON
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -58,7 +70,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
-// 5. Swagger / OpenAPI with Bearer Auth
+// 6. Swagger / OpenAPI with Bearer Auth
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -66,7 +78,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Digital Graveyard & Memorial Management API",
         Version = "v1",
-        Description = "API for Graveyard Administration, Burials, Digital Memorials, and Finances."
+        Description = "Sprint 2 — Full CRUD API: Auth · Graveyards · Graves · Burials · Deceased · Finance · Memorials · Dashboard"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -96,13 +108,14 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// 6. HTTP Pipeline
+// 7. HTTP Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "DGMMS API v1");
+        c.RoutePrefix = "swagger";
     });
 }
 
@@ -120,9 +133,25 @@ app.MapGet("/api/health", async (GraveyardDbContext db) =>
     return Results.Ok(new
     {
         status = "Healthy",
+        sprint = "Sprint 2 — Complete",
         databaseConnected = canConnect,
         server = "DESKTOP-B6E86RN",
         database = "Graveyard",
+        endpoints = new[]
+        {
+            "POST /api/auth/login",
+            "POST /api/auth/register",
+            "GET  /api/auth/me",
+            "GET  /api/graveyards",
+            "GET  /api/graves",
+            "GET  /api/burials",
+            "GET  /api/deceased",
+            "GET  /api/finance/donations",
+            "GET  /api/finance/expenses",
+            "GET  /api/finance/funds",
+            "GET  /api/memorials",
+            "GET  /api/dashboard"
+        },
         timestamp = DateTime.UtcNow
     });
 }).WithTags("Health");

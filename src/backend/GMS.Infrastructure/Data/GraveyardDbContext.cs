@@ -1,7 +1,6 @@
-﻿using GMS.Core.Entities;
+using GMS.Core.Entities;
 using System;
 using System.Collections.Generic;
-using GMS.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GMS.Infrastructure.Data;
